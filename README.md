@@ -67,11 +67,13 @@ Installation
 --------------
 
 * Run this command first:
+
   ```
   curl https://raw.githubusercontent.com/Ardakilic/backmeup/master/backmeup.sh -O backmeup.sh
   ```
 * Now, edit the configuration values as stated [here](#configuration-values)
 * Make the file executable and only accessible by root:
+
   ```
   chown root:root backmeup.sh
   chmod 700 backmeup.sh
@@ -81,6 +83,7 @@ Usage
 --------------
 
 * Execute the configured script:
+
   ```
   ./backmeup.sh
   ```
