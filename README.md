@@ -29,7 +29,7 @@ This script does some simple tasks:
 * After the upload, the script cleans the temporary files (dumps, the archive itself). 
 * The script makes sure that you always have the newest Dropbox-uploader script.
 
-You may easily add this script to your crontab, and 
+You may easily add this script to your crontab, and just forget about it :smile:
 
 Version
 --------------
@@ -96,7 +96,7 @@ This script saves MySQL Root password inside, but it's only accessible by root. 
 
 Special Thanks
 --------------
-@andreafabrizi for maintaining the [Dropbox-Uploader](https://github.com/andreafabrizi/Dropbox-Uploader) script.
+[@andreafabrizi](https://github.com/andreafabrizi/) for maintaining the [Dropbox-Uploader](https://github.com/andreafabrizi/Dropbox-Uploader) script.
 
 TODO
 --------------
