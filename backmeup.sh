@@ -32,7 +32,7 @@ DROPBOXFOLDER="backmeup" #your backup folder that'll be created on Dropbox
 
 #Cleanup Function
 function cleanup {
-    rm -rf $1/backmeup*
+    rm -rf $1/$DROPBOXFOLDER*
 }
 
 #rm "$OUTPUTDIR/*gz" > /dev/null 2>&1
