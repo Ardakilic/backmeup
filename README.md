@@ -22,10 +22,10 @@ I'm managing my own server, and I wanted to have a simple and easy tool to backu
 What This Script Does
 --------------
 This script does some simple tasks:
-* The script dumps all of your MySQL databases as separate files.
+* The script dumps all of your MySQL databases individually.
 * The script backs up all of your Web files (e.g: root of all of your virtual hosts).
 * The script compresses your web-root and databases to a single archive.
-* The script uploads the compressed archive into a folder in Dropbox.
+* The script uploads the compressed archive into a folder in your Dropbox account.
 * After the upload, the script cleans the temporary files (dumps, the archive itself). 
 * The script makes sure that you always have the newest Dropbox-uploader script.
 
@@ -34,7 +34,7 @@ You may easily add this script to your crontab, and just forget about it :smile:
 Version
 --------------
 
-0.1
+0.1.1
 
 Requirements
 --------------
@@ -72,11 +72,11 @@ Installation
   curl https://raw.githubusercontent.com/Ardakilic/backmeup/master/backmeup.sh -O backmeup.sh
   ```
 * Now, edit the configuration values as stated [here](#configuration-values)
-* Make the file executable and only accessible by root:
+* Make the file executable and only accessible by your root user and group (or the user you'd like the script to run):
 
   ```
   chown root:root backmeup.sh
-  chmod 700 backmeup.sh
+  chmod +x backmeup.sh
   ```
 
 Usage
@@ -94,15 +94,25 @@ Important Notice
 --------------
 This script saves MySQL Root password inside, but it's only accessible by root. In any ways, use it at your own risk. I'm not holding any responsibilities for any damage that this script may do (which shouldn't).
 
+Additional Notes
+--------------
+* You can also copy the script to one of your PATHS, such as `/usr/local/bin/backmeup` and run from there directly.
+
 Special Thanks
 --------------
 [@andreafabrizi](https://github.com/andreafabrizi/) for maintaining the [Dropbox-Uploader](https://github.com/andreafabrizi/Dropbox-Uploader) script.
 
-TODO
+TODOs
 --------------
 * Tests on CentOS, Arch etc.
-* Copy.com integration
+* Mega.nz integration
+* ~~~Copy.com integration~~~
 * Increased security?
+
+Version History
+--------------
+* 0.1.1 - Defined PATHs to the script so that it should work better on cron withot needing to define before running.
+* 0.1 - Initial Release
 
 License
 --------------
