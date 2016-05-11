@@ -1,7 +1,7 @@
 BackMeUp
 =========
 
-BackMeUp is an automated MySQL databases and files backup solution on Linux Machines using Dropbox as remote service.
+BackMeUp is an automated MySQL databases and files backup solution on Linux Machines using Amazon S3 and Dropbox as remote service.
 
 
 ```
@@ -25,8 +25,8 @@ This script does some simple tasks:
 * The script dumps all of your MySQL databases individually.
 * The script backs up all of your Web files (e.g: root of all of your virtual hosts).
 * The script compresses your web-root and databases to a single archive.
-* The script uploads the compressed archive into a folder in your Dropbox or Amazon S3 account.
-* If the provider is Dropbox, The script makes sure that you always have the newest Dropbox-uploader script.
+* The script uploads the compressed archive into a folder in your Dropbox account or Amazon S3 bucket.
+* If the `method` is set to `dropbox`, The script makes sure that you always have the newest Dropbox-uploader script.
 * After the upload, the script cleans the temporary files (dumps, the archive itself).
 
 You may easily add this script to your crontab, and just forget about it :smile:
@@ -138,8 +138,11 @@ Version History
 * Amazon S3 support (using official [aws-cli](https://github.com/aws/aws-cli))
 * The code is optimised to use in cron
 * Arguments and options support. You can pass the arguments and options to the script on-the-fly
+
 ###0.1.1
 * Defined PATHs to the script so that it should work better on cron withot needing to define before running.
+
+
 ###0.1.0
 * Initial Release
 
