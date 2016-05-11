@@ -16,7 +16,7 @@ echo '-------------------------------------------------'
 echo ''
 echo '-------------------------------------------------'
 echo '| Author: Arda Kilicdagi'
-echo '| https://github.com/ardakilic/backmeup/'
+echo '| https://github.com/Ardakilic/backmeup/'
 echo '-------------------------------------------------'
 echo ''
 
@@ -27,15 +27,69 @@ DBUSER="root" #MySQL user that can dump all databases
 DBPASSWORD="" #MySQL password
 FILESROOT="/var/www" #root of your (virtual) hosting files, E.g: For apache, it is /var/www, for nginx, it's /usr/share/nginx/html "WITHOUT THE END TRAILING SLASH"
 BASEFOLDER="/tmp" #Temporary folder to create database dump folder (a subfolder will be created to this folder upon dumping)
-DROPBOXFOLDER="backmeup" #your backup folder that'll be created on Dropbox
+BACKUPFOLDER="backmeup" #your backup folder that'll be created on Backup provider
+METHOD="dropbox" #Method name, can be "dropbox" or "s3". More providers soon
+S3_BUCKET_NAME="my-aws-bucket" #AWS S3 Bucket name
+#CONFIG_FILE=~/.backmeuprc
+#TODO: read these from config, "source ~/.backmeuprc"
 
 ########################################################
 # DO NOT EDIT BELOW UNLESS YOU KNOW WHAT YOU'RE DOING!
 ########################################################
 
+#Check the shell
+if [ -z "$BASH_VERSION" ]; then
+    echo -e "Error: this script requires the BASH shell!"
+    exit 1
+fi
+
+# Let's get arguments and overwrite config if required
+while [[ $# > 1 ]]
+do
+key="$1"
+
+case $key in
+    -tz|--timezone)
+    TIMEZONE="$2"
+    shift # past argument
+    ;;
+    -dbu|--database-user)
+    DBUSER="$2"
+    shift # past argument
+    ;;
+    -dbpass|--database-password)
+    DBPASSWORD="$2"
+    shift # past argument
+    ;;
+    -f|--files-root)
+    FILESROOT="$2"
+    shift # past argument
+    ;;
+    -b|--base-folder)
+    BASEFOLDER="$2"
+    shift # past argument
+    ;;
+    -bf|--backup-folder)
+    BACKUPFOLDER="$2"
+    shift # past argument
+    ;;
+    -m|--method)
+    METHOD="$2"
+    shift # past argument
+    ;;
+    -s3bn|--s3-bucket-name)
+    S3_BUCKET_NAME="$2"
+    shift # past argument
+    ;;
+esac
+shift # past argument or value
+done
+# END Arguments
+
+
 #Cleanup Function
 function cleanup {
-    rm -rf $1/$DROPBOXFOLDER*
+    rm -rf $1/$BACKUPFOLDER*
 }
 
 #rm "$OUTPUTDIR/*gz" > /dev/null 2>&1
@@ -66,6 +120,14 @@ if ! which mysqldump > /dev/null;
     INSTALLABLE="nope"
     ERRORMSGS+=('| You must install mysqldump to run this script')
 fi
+if [[ "$METHOD" == "s3" ]]
+    then
+    if ! which aws > /dev/null;
+        then
+        INSTALLABLE="nope"
+        ERRORMSGS+=('| You must install aws cli to run this script to upload backups to Amazon S3')
+    fi
+fi
 
 
 
@@ -79,64 +141,79 @@ then
     SQLFOLDERFULL=$BASEFOLDER/$SQLFOLDER
     mkdir $SQLFOLDERFULL
 
-    #Now let's fetch Dropbox Uploader
-    #https://github.com/andreafabrizi/Dropbox-Uploader
-    #to make sure it's always the newest version, first let's delete and fetch it
-    cd $HOME
-    echo '| Fetching the newest Dropbox-Uploader from repository...'
-    rm -rf dropbox_uploader.sh
-    curl -s https://raw.githubusercontent.com/andreafabrizi/Dropbox-Uploader/master/dropbox_uploader.sh -o dropbox_uploader.sh
+    # First, let's create the backup file regardless of the provider:
+    echo '|'
+    echo '| Dumping Databases...'
+    echo '|'
+    #Let's start dumping the databases
+    databases=`mysql --user=$DBUSER -p$DBPASSWORD -e "SHOW DATABASES;" | tr -d "| " | grep -v Database`
+    for db in $databases; do
+        if [[ "$db" != "information_schema" ]] && [[ "$db" != "performance_schema" ]] && [[ "$db" != "mysql" ]] && [[ "$db" != _* ]] ; then
+            echo "| Dumping database: $db"
+            mysqldump -u$DBUSER -p$DBPASSWORD $db > $SQLFOLDERFULL/$THEDATE.$db.sql
+        fi
+    done
+    echo '|'
     echo '| Done!'
-    echo '-------------------------------------------------'
-    #make it executable
-    chmod +x dropbox_uploader.sh
+    echo '|'
 
-    #Is Dropbox-Uploader configured?
-    if [ ! -f $HOME/.dropbox_uploader ]; 
+    #Now let's compress
+    FILENAME="backmeup-$THEDATE.tar.gz"
+    echo '| Now compressing the backup...'
+    tar -zcf $FILENAME -C $FILESROOT . -C $BASEFOLDER $SQLFOLDER/ > /dev/null
+    echo '|'
+    echo "| Done! The backup's name is: $FILENAME"
+    echo '|'
+    # Create backup END
+
+    # If uploading method is set as Dropbox
+    if [[ "$METHOD" == "dropbox" ]]
         then
-        echo '| You must configure the Dropbox first!'
-        echo '| Please run ./dropbox_uploader.sh and follow the instructions.'
-        echo '| After that, re-run this script'
-    else
-        #everything okay, now let's start dumping
-        echo '| Dumping Databases...'
-        echo '|'
-        #Let's start dumping the databases
-        databases=`mysql --user=$DBUSER -p$DBPASSWORD -e "SHOW DATABASES;" | tr -d "| " | grep -v Database`
-        for db in $databases; do
-            if [[ "$db" != "information_schema" ]] && [[ "$db" != "performance_schema" ]] && [[ "$db" != "mysql" ]] && [[ "$db" != _* ]] ; then
-                echo "| Dumping database: $db"
-                mysqldump -u$DBUSER -p$DBPASSWORD $db > $SQLFOLDERFULL/$THEDATE.$db.sql
-            fi
-        done
-        echo '|'
+        #Now let's fetch Dropbox Uploader
+        #https://github.com/andreafabrizi/Dropbox-Uploader
+        #to make sure it's always the newest version, first let's delete and fetch it
+        cd $HOME
+        echo '| Fetching the newest Dropbox-Uploader from repository...'
+        rm -rf dropbox_uploader.sh
+        curl -s https://raw.githubusercontent.com/andreafabrizi/Dropbox-Uploader/master/dropbox_uploader.sh -o /usr/local/bin/dropbox_uploader
         echo '| Done!'
-        echo '|'
+        echo '-------------------------------------------------'
+        #make it executable
+        chmod +x /usr/local/bin/dropbox-uploader
 
-        #Now let's compress
-        FILENAME="backmeup-$THEDATE.tar.gz"
-        echo '| Now compressing the backup...'
-        tar -zcvf $FILENAME -C $FILESROOT . -C $BASEFOLDER $SQLFOLDER/ > /dev/null
-        echo '|'
-        echo "| Done! The backup's name is: $FILENAME"
-        echo '|'
-
-        #Now, let's upload to Dropbox:
-        echo '| Creating the directory and uploading to Dropbox...'
-        ./dropbox_uploader.sh mkdir $DROPBOXFOLDER
-        ./dropbox_uploader.sh upload $FILENAME $DROPBOXFOLDER
-        echo '|'
-        echo '| Done!'
-        echo '|'
-
-        echo '| Cleaning up..'
-        #Now let's cleanup
-        rm -r $FILENAME
-        cleanup $BASEFOLDER
-        echo '|'
-        echo "| Done! You should now see your backup '$FILENAME' inside the '$DROPBOXFOLDER' in your Dropbox"
-
+        #Is Dropbox-Uploader configured?
+        if [ ! -f $HOME/.dropbox_uploader ];
+            then
+            echo '| You must configure the Dropbox first!'
+            echo '| Please run dropbox_uploader.sh as the user which will run this script and follow the instructions.'
+            echo '| After that, re-run this script again'
+        else
+            #Now, let's upload to Dropbox:
+            echo '| Creating the directory and uploading to Dropbox...'
+            dropbox_uploader mkdir $BACKUPFOLDER
+            dropbox_uploader upload $FILENAME $BACKUPFOLDER
+            echo '|'
+            echo '| Done!'
+            echo '|'
+        fi
     fi
+
+    # If uploading method is set to AWS S3
+    if [[ "$METHOD" == "s3" ]]
+        then
+        echo '| Creating the directory and uploading to Amazon S3...'
+        aws s3 cp $FILENAME s3://$S3_BUCKET_NAME/$BACKUPFOLDER/
+        echo '|'
+        echo '| Done!'
+        echo '|'
+    fi
+
+    echo '| Cleaning up..'
+    #Now let's cleanup
+    rm -r $FILENAME
+    cleanup $BASEFOLDER
+    echo '|'
+    echo "| Done! You should now see your backup '$FILENAME' inside the '$BACKUPFOLDER' in your Backup Solution"
 
 else
     echo '| ERROR:'
