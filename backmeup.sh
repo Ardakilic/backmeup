@@ -30,6 +30,7 @@ BASEFOLDER="/tmp" #Temporary folder to create database dump folder (a subfolder 
 BACKUPFOLDER="backmeup" #your backup folder that'll be created on Backup provider
 METHOD="dropbox" #Method name, can be "dropbox" or "s3". More providers soon
 S3_BUCKET_NAME="my-aws-bucket" #AWS S3 Bucket name
+S3_STORAGE_CLASS="REDUCED_REDUNDANCY" #AWS S3 storage class. Values are "STANDARD", "REDUCED_REDUNDANCY", "STANDARD_IA". http://docs.aws.amazon.com/cli/latest/reference/s3/cp.html
 #CONFIG_FILE=~/.backmeuprc
 #TODO: read these from config, "source ~/.backmeuprc"
 
@@ -81,6 +82,10 @@ case $key in
     S3_BUCKET_NAME="$2"
     shift # past argument
     ;;
+    -s3sc|--s3-storage-class)
+    S3_STORAGE_CLASS="$2"
+    shift # past argument
+    ;;
 esac
 shift # past argument or value
 done
@@ -98,7 +103,6 @@ function cleanup {
 THEDATE=`TZ=$TIMEZONE date +%Y-%m-%d_%H.%M.%S`
 
 INSTALLABLE="yes"
-DROPBOX_CONFIGURED="yes"
 ERRORMSGS=()
 if ! which curl > /dev/null;
     then
@@ -174,18 +178,18 @@ then
         #to make sure it's always the newest version, first let's delete and fetch it
         cd $HOME
         echo '| Fetching the newest Dropbox-Uploader from repository...'
-        rm -rf dropbox_uploader.sh
+        rm -rf /usr/local/bin/dropbox_uploader
         curl -s https://raw.githubusercontent.com/andreafabrizi/Dropbox-Uploader/master/dropbox_uploader.sh -o /usr/local/bin/dropbox_uploader
         echo '| Done!'
         echo '-------------------------------------------------'
         #make it executable
-        chmod +x /usr/local/bin/dropbox-uploader
+        chmod +x /usr/local/bin/dropbox_uploader
 
         #Is Dropbox-Uploader configured?
         if [ ! -f $HOME/.dropbox_uploader ];
             then
             echo '| You must configure the Dropbox first!'
-            echo '| Please run dropbox_uploader.sh as the user which will run this script and follow the instructions.'
+            echo '| Please run dropbox_uploader as the user which will run this script and follow the instructions.'
             echo '| After that, re-run this script again'
         else
             #Now, let's upload to Dropbox:
@@ -202,7 +206,7 @@ then
     if [[ "$METHOD" == "s3" ]]
         then
         echo '| Creating the directory and uploading to Amazon S3...'
-        aws s3 cp $FILENAME s3://$S3_BUCKET_NAME/$BACKUPFOLDER/
+        aws s3 cp --storage-class $S3_STORAGE_CLASS $FILENAME s3://$S3_BUCKET_NAME/$BACKUPFOLDER/ 
         echo '|'
         echo '| Done!'
         echo '|'

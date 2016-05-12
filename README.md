@@ -26,8 +26,8 @@ This script does some simple tasks:
 * The script backs up all of your Web files (e.g: root of all of your virtual hosts).
 * The script compresses your web-root and databases to a single archive.
 * The script uploads the compressed archive into a folder in your Dropbox account or Amazon S3 bucket.
-* If the `method` is set to `dropbox`, The script makes sure that you always have the newest Dropbox-uploader script.
-* After the upload, the script cleans the temporary files (dumps, the archive itself).
+* If the `method` is set to `dropbox`, The script makes sure that you always have the newest Dropbox-Uploader script.
+* After the upload, the script cleans up the temporary files (dumps, the archive itself).
 
 You may easily add this script to your crontab, and just forget about it :smile:
 
@@ -37,7 +37,7 @@ Requirements
 * `curl` - To download the dropbox-uploader script and to upload the backup to Dropbox.
 * `mysql-cli` - To list databases.
 * `mysqldump` - To dump databases (in most cases, it comes with `mysql-cli`).
-* [aws-cli](https://github.com/aws/aws-cli) must be installed and configured if the service is set as `aws`
+* [aws-cli](https://github.com/aws/aws-cli) must be installed and configured if the `method` is set as `s3`.
 
 
 Don't Have a Dropbox Account?
@@ -60,6 +60,7 @@ BASEFOLDER="/tmp" #Temporary folder to create database dump folder (a subfolder 
 BACKUPFOLDER="backmeup" #your backup folder that'll be created on Backup provider
 METHOD="dropbox" #Method name, can be "dropbox" or "s3". More providers soon
 S3_BUCKET_NAME="my-aws-bucket" #AWS S3 Bucket name
+S3_STORAGE_CLASS="REDUCED_REDUNDANCY" #AWS S3 storage class. Values are "STANDARD", "REDUCED_REDUNDANCY", "STANDARD_IA". http://docs.aws.amazon.com/cli/latest/reference/s3/cp.html
 ```
 
 On-the-fly Configuration
@@ -67,13 +68,13 @@ On-the-fly Configuration
 You can set various configuration values on the fly. Here are some full featured examples:
 
 ```
-backmeup -tz "Europe/Istanbul" -dbu root -dbpass rootpass -f "/usr/share/nginx/html" -b "/tmp" -bf=my_backups -m s3 -s3bn my-aws-bucket
+backmeup -tz "Europe/Istanbul" -dbu root -dbpass rootpass -f "/usr/share/nginx/html" -b "/tmp" -bf=my_backups -m s3 -s3bn my-aws-bucket -s3sc REDUCED_REDUNDANCY
 ```
 
 Or like this:
 
 ````
-backmeup --timezone="Europe/Istanbul" --database-user="root" --database-password="rootpass" --files-root="/usr/share/nginx/html" --base-folder="/tmp" --backup-folder=my-remote-backup-folder
+backmeup --timezone="Europe/Istanbul" --database-user="root" --database-password="rootpass" --files-root="/usr/share/nginx/html" --base-folder="/tmp" --backup-folder=my-remote-backup-folder --s3-storage-class=REDUCED_REDUNDANCY
 ```
 
 None of these are mandatory, you can just use any of these however you want, and even mix together!
@@ -84,7 +85,7 @@ Installation
 * Run this command first:
 
   ```
-  curl https://raw.githubusercontent.com/Ardakilic/backmeup/master/backmeup.sh -O backmeup.sh
+  curl -s https://raw.githubusercontent.com/Ardakilic/backmeup/master/backmeup.sh -o backmeup.sh
   ```
 * Now, edit the configuration values as stated [here](#configuration-values)
 * Make the file executable and only accessible by your root user and group (or the user you'd like the script to run):
@@ -93,7 +94,7 @@ Installation
   chown root:root backmeup.sh #or any user and group who will run the script
   chmod +x backmeup.sh
   ```
-* (Suggested) Copy or move the script into one of the `PATH`s as stated [here](#additional-notes)
+* (Suggested) Copy or move the script into one of the `PATH`s as stated [here](#additional-notes).
 
 Usage
 --------------
@@ -101,14 +102,14 @@ Usage
 * Execute the configured script:
 
   ```
-  ./backmeup.sh
+  ./backmeup.sh #or backmeup directly if it's in your PATH.
   ```
-* If this is the first attempt to running and `method` is set to `dropbox`, Dropbox-Uploader will ask for an APP key and secret. You should create an appliction, provide these values and click on provided authorization link (Don't worry, the Dropbox-uploader has a nice wizard which guides you, can't be easier). After you've authorized, re-run the script using `.backmeup.sh`
+* If this is the first attempt to running and `method` is set to `dropbox`, Dropbox-Uploader will ask for an APP key and secret. You should create an appliction, provide these values and click on provided authorization link (Don't worry, the Dropbox-uploader has a nice wizard which guides you, can't be easier). After you've authorized, re-run the script using `./backmeup.sh`
 * If everything went well, in a couple of minutes, you should see your database and files copied into the remote server.
 
 Important Notice
 --------------
-This script saves MySQL Root password inside, but it's only accessible by root. In any ways, use it at your own risk. I'm not holding any responsibilities for any damage that this script may do (which shouldn't).
+This script saves MySQL Root password (any user which can show and dump all databases will suffice actually) inside, but it's only accessible by root. In any ways, use it at your own risk. I'm not holding any responsibilities for any damage that this script may do (which shouldn't).
 
 Additional Notes
 --------------
@@ -127,13 +128,17 @@ TODOs
 --------------
 * Tests on CentOS, Arch etc.
 * Mega.nz integration
-* ~~~Copy.com integration~~~
-* ~~~AWS S3 integration~~~
+* ~~Copy.com integration~~
+* ~~AWS S3 integration~~
 * Increased security?
 * Read configuration from an external file
 
 Version History
 --------------
+###1.0.1
+* Amazon S3 Storage Class Support: Now you can set how the backup will be stored (normal, or [Reduced Redundancy](https://aws.amazon.com/s3/reduced-redundancy/) for lesser storage costs).
+* An issue with Dropbox-uploader download path is fixed.
+
 ###1.0.0
 * Amazon S3 support (using official [aws-cli](https://github.com/aws/aws-cli))
 * The code is optimised to use in cron
