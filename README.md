@@ -17,7 +17,7 @@ BackMeUp is an automated MySQL databases and files backup solution on Linux Mach
 
 Why?
 --------------
-I'm managing my own server, and I wanted to have a simple and easy tool to backup my database and all VirtualHost files, and to save them into a remote server with cron.
+I'm managing my own server, and I wanted to have a simple and easy tool to backup my database and all VirtualHost files, and to save them into a remote server with cronjob.
 
 What This Script Does
 --------------
@@ -34,9 +34,9 @@ You may easily add this script to your crontab, and just forget about it :smile:
 
 Requirements
 --------------
-* `curl` - To download the dropbox-uploader script and to upload the backup to Dropbox.
-* `mysql-cli` - To list databases.
-* `mysqldump` - To dump databases (in most cases, it comes with `mysql-cli`).
+* `curl` - To download the Dropbox-uploader script and to upload the backup to Dropbox.
+* `mysql` (cli) - To list databases.
+* `mysqldump` - To dump databases (in most cases, it comes with `mysql` cli).
 * [aws-cli](https://github.com/aws/aws-cli) must be installed and configured if the `method` is set as `s3`.
 
 
@@ -49,7 +49,7 @@ Just click on [this link](https://db.tt/A4QRGuD) to start Dropbox with a bonus s
 
 Configuration Values
 --------------
-After downloading the script, before running, you must edit your configuration values:
+After downloading the script, before running, you must edit your configuration values found in `~/.backmeuprc`:
 
 ```sh
 TIMEZONE="Europe/Istanbul" #Your timezone, for a better timestamp in archived filenames
@@ -60,7 +60,7 @@ BASEFOLDER="/tmp" #Temporary folder to create database dump folder (a subfolder 
 BACKUPFOLDER="backmeup" #your backup folder that'll be created on Backup provider
 METHOD="dropbox" #Method name, can be "dropbox" or "s3". More providers soon
 S3_BUCKET_NAME="my-aws-bucket" #AWS S3 Bucket name
-S3_STORAGE_CLASS="REDUCED_REDUNDANCY" #AWS S3 storage class. Values are "STANDARD", "REDUCED_REDUNDANCY", "STANDARD_IA". http://docs.aws.amazon.com/cli/latest/reference/s3/cp.html
+S3_STORAGE_CLASS="STANDARD_IA" #AWS S3 storage class. Values can be "STANDARD", "REDUCED_REDUNDANCY", "STANDARD_IA". http://docs.aws.amazon.com/cli/latest/reference/s3/cp.html
 ```
 
 On-the-fly Configuration
@@ -68,13 +68,13 @@ On-the-fly Configuration
 You can set various configuration values on the fly. Here are some full featured examples:
 
 ```
-backmeup -tz "Europe/Istanbul" -dbu root -dbpass rootpass -f "/usr/share/nginx/html" -b "/tmp" -bf=my_backups -m s3 -s3bn my-aws-bucket -s3sc REDUCED_REDUNDANCY
+backmeup -tz "Europe/Istanbul" -dbu root -dbpass rootpass -f "/usr/share/nginx/html" -b "/tmp" -bf=my_backups -m s3 -s3bn my-aws-bucket -s3sc STANDARD_IA
 ```
 
 Or like this:
 
 ````
-backmeup --timezone="Europe/Istanbul" --database-user="root" --database-password="rootpass" --files-root="/usr/share/nginx/html" --base-folder="/tmp" --backup-folder=my-remote-backup-folder --s3-storage-class=REDUCED_REDUNDANCY
+backmeup --timezone="Europe/Istanbul" --database-user="root" --database-password="rootpass" --files-root="/usr/share/nginx/html" --base-folder="/tmp" --backup-folder=my-remote-backup-folder --s3-storage-class=STANDARD_IA
 ```
 
 None of these are mandatory, you can just use any of these however you want, and even mix together!
@@ -82,16 +82,19 @@ None of these are mandatory, you can just use any of these however you want, and
 Installation
 --------------
 
-* Run this command first:
+* Run these commands first:
 
-  ```
+  ```sh
   curl -s https://raw.githubusercontent.com/Ardakilic/backmeup/master/backmeup.sh -o backmeup.sh
+  curl -s https://raw.githubusercontent.com/Ardakilic/backmeup/master/.backmeuprc -o ~/.backmeuprc
+  chmod 400 ~/.backmeuprc
   ```
-* Now, edit the configuration values as stated [here](#configuration-values)
+* Now, edit the configuration values as stated [here](#configuration-values).
 * Make the file executable and only accessible by your root user and group (or the user you'd like the script to run):
 
-  ```
-  chown root:root backmeup.sh #or any user and group who will run the script
+  ```sh
+  chown root:root backmeup.sh #or any user and group who will run the script or with cron
+  chown root:root ~/.backmeuprc #or any user and group who will run the script manually or with cron
   chmod +x backmeup.sh
   ```
 * (Suggested) Copy or move the script into one of the `PATH`s as stated [here](#additional-notes).
@@ -101,10 +104,10 @@ Usage
 
 * Execute the configured script:
 
-  ```
+  ```sh
   ./backmeup.sh #or backmeup directly if it's in your PATH.
   ```
-* If this is the first attempt to running and `method` is set to `dropbox`, Dropbox-Uploader will ask for an APP key and secret. You should create an appliction, provide these values and click on provided authorization link (Don't worry, the Dropbox-uploader has a nice wizard which guides you, can't be easier). After you've authorized, re-run the script using `./backmeup.sh`
+* If this is the first attempt to running and `method` is set to `dropbox`, Dropbox-Uploader will ask for an APP key and secret. You should create an application, provide these values and click on provided authorization link (Don't worry, the Dropbox-uploader has a nice wizard which guides you, can't be easier). After you've authorized, re-run the script using `./backmeup.sh`
 * If everything went well, in a couple of minutes, you should see your database and files copied into the remote server.
 
 Important Notice
@@ -131,12 +134,14 @@ TODOs
 * ~~Copy.com integration~~
 * ~~AWS S3 integration~~
 * Increased security?
-* Read configuration from an external file
+* ~~Reading configuration from an external file~~
+* Postgres support
 
 Version History
 --------------
 ###1.0.1
-* Amazon S3 Storage Class Support: Now you can set how the backup will be stored (normal, or [Reduced Redundancy](https://aws.amazon.com/s3/reduced-redundancy/) for lesser storage costs).
+* External configuration file support. Now you can update backmeup hassle-free! The file's located at: `~/.backmeuprc`
+* Amazon S3 Storage Class Support: Now you can set how the backup will be stored ([Normal or Infrequent Access](https://aws.amazon.com/s3/storage-classes/) or [Reduced Redundancy](https://aws.amazon.com/s3/reduced-redundancy/) for lesser storage costs).
 * An issue with Dropbox-uploader download path is fixed.
 
 ###1.0.0

@@ -21,24 +21,23 @@ echo '-------------------------------------------------'
 echo ''
 
 
-#CONFIGURATION PARAMETERS
-TIMEZONE="Europe/Istanbul" #Your timezone, for a better timestamp in archived filenames
-DBUSER="root" #MySQL user that can dump all databases
-DBPASSWORD="" #MySQL password
-FILESROOT="/var/www" #root of your (virtual) hosting files, E.g: For apache, it is /var/www, for nginx, it's /usr/share/nginx/html "WITHOUT THE END TRAILING SLASH"
-BASEFOLDER="/tmp" #Temporary folder to create database dump folder (a subfolder will be created to this folder upon dumping)
-BACKUPFOLDER="backmeup" #your backup folder that'll be created on Backup provider
-METHOD="dropbox" #Method name, can be "dropbox" or "s3". More providers soon
-S3_BUCKET_NAME="my-aws-bucket" #AWS S3 Bucket name
-S3_STORAGE_CLASS="REDUCED_REDUNDANCY" #AWS S3 storage class. Values are "STANDARD", "REDUCED_REDUNDANCY", "STANDARD_IA". http://docs.aws.amazon.com/cli/latest/reference/s3/cp.html
-#CONFIG_FILE=~/.backmeuprc
-#TODO: read these from config, "source ~/.backmeuprc"
 
 ########################################################
 # DO NOT EDIT BELOW UNLESS YOU KNOW WHAT YOU'RE DOING!
 ########################################################
 
-#Check the shell
+# Configuration parameters
+# If no configuration file is found, let's download and create one.
+if [ ! -f $HOME/.backmeuprc ];
+    then
+    curl -s https://raw.githubusercontent.com/Ardakilic/backmeup/master/.backmeuprc -o $HOME/.backmeuprc
+    chmod 400 $HOME/.backmeuprc # This file must have least permissions as possible.
+fi
+
+# Let's Source the configuration file
+source $HOME/.backmeuprc
+
+# Check the shell
 if [ -z "$BASH_VERSION" ]; then
     echo -e "Error: this script requires the BASH shell!"
     exit 1
@@ -92,14 +91,12 @@ done
 # END Arguments
 
 
-#Cleanup Function
+# Cleanup Function
 function cleanup {
-    rm -rf $1/$BACKUPFOLDER*
+    rm -rf $1/backmeup* #Database dump folder for the time being
 }
 
-#rm "$OUTPUTDIR/*gz" > /dev/null 2>&1
-
-#needed for file and folder names
+# Needed for file and folder names
 THEDATE=`TZ=$TIMEZONE date +%Y-%m-%d_%H.%M.%S`
 
 INSTALLABLE="yes"
@@ -134,13 +131,13 @@ if [[ "$METHOD" == "s3" ]]
 fi
 
 
-
+# Let's check whether the script is installable
 if [[ "$INSTALLABLE" == "yes" ]]
 then
     
-    #pre-cleanup
+    # pre-cleanup
     cleanup $BASEFOLDER
-    #folder for new backup
+    # folder for new backup
     SQLFOLDER=backmeup-databases-$THEDATE
     SQLFOLDERFULL=$BASEFOLDER/$SQLFOLDER
     mkdir $SQLFOLDERFULL
@@ -149,7 +146,7 @@ then
     echo '|'
     echo '| Dumping Databases...'
     echo '|'
-    #Let's start dumping the databases
+    # Let's start dumping the databases
     databases=`mysql --user=$DBUSER -p$DBPASSWORD -e "SHOW DATABASES;" | tr -d "| " | grep -v Database`
     for db in $databases; do
         if [[ "$db" != "information_schema" ]] && [[ "$db" != "performance_schema" ]] && [[ "$db" != "mysql" ]] && [[ "$db" != _* ]] ; then
@@ -161,7 +158,7 @@ then
     echo '| Done!'
     echo '|'
 
-    #Now let's compress
+    # Now let's compress
     FILENAME="backmeup-$THEDATE.tar.gz"
     echo '| Now compressing the backup...'
     tar -zcf $FILENAME -C $FILESROOT . -C $BASEFOLDER $SQLFOLDER/ > /dev/null
@@ -173,26 +170,26 @@ then
     # If uploading method is set as Dropbox
     if [[ "$METHOD" == "dropbox" ]]
         then
-        #Now let's fetch Dropbox Uploader
-        #https://github.com/andreafabrizi/Dropbox-Uploader
-        #to make sure it's always the newest version, first let's delete and fetch it
+        # Now let's fetch Dropbox Uploader
+        # https://github.com/andreafabrizi/Dropbox-Uploader
+        # to make sure it's always the newest version, first let's delete and fetch it
         cd $HOME
         echo '| Fetching the newest Dropbox-Uploader from repository...'
         rm -rf /usr/local/bin/dropbox_uploader
         curl -s https://raw.githubusercontent.com/andreafabrizi/Dropbox-Uploader/master/dropbox_uploader.sh -o /usr/local/bin/dropbox_uploader
         echo '| Done!'
         echo '-------------------------------------------------'
-        #make it executable
+        # make it executable
         chmod +x /usr/local/bin/dropbox_uploader
 
-        #Is Dropbox-Uploader configured?
+        # Is Dropbox-Uploader configured?
         if [ ! -f $HOME/.dropbox_uploader ];
             then
             echo '| You must configure the Dropbox first!'
             echo '| Please run dropbox_uploader as the user which will run this script and follow the instructions.'
             echo '| After that, re-run this script again'
         else
-            #Now, let's upload to Dropbox:
+            # Now, let's upload to Dropbox:
             echo '| Creating the directory and uploading to Dropbox...'
             dropbox_uploader mkdir $BACKUPFOLDER
             dropbox_uploader upload $FILENAME $BACKUPFOLDER
@@ -213,7 +210,7 @@ then
     fi
 
     echo '| Cleaning up..'
-    #Now let's cleanup
+    # Now let's cleanup
     rm -r $FILENAME
     cleanup $BASEFOLDER
     echo '|'
@@ -229,5 +226,5 @@ fi
 
 echo '-------------------------------------------------'
 
-#Let's clean up just in case
+# Let's clean up just in case
 cleanup $BASEFOLDER
