@@ -53,12 +53,20 @@ case $key in
     TIMEZONE="$2"
     shift # past argument
     ;;
+    -dbh|--database-host)
+    DBHOST="$2"
+    shift # past argument
+    ;;
     -dbu|--database-user)
     DBUSER="$2"
     shift # past argument
     ;;
     -dbpass|--database-password)
     DBPASSWORD="$2"
+    shift # past argument
+    ;;
+    -dbp|--database-port)
+    DBPORT="$2"
     shift # past argument
     ;;
     -f|--files-root)
@@ -147,11 +155,11 @@ then
     echo '| Dumping Databases...'
     echo '|'
     # Let's start dumping the databases
-    databases=`mysql --user=$DBUSER -p$DBPASSWORD -e "SHOW DATABASES;" | tr -d "| " | grep -v Database`
+    databases=`mysql -h$DBHOST -u$DBUSER -p$DBPASSWORD -P$DBPORT -e "SHOW DATABASES;" | tr -d "| " | grep -v Database`
     for db in $databases; do
         if [[ "$db" != "information_schema" ]] && [[ "$db" != "performance_schema" ]] && [[ "$db" != "mysql" ]] && [[ "$db" != _* ]] ; then
             echo "| Dumping database: $db"
-            mysqldump -u$DBUSER -p$DBPASSWORD $db > $SQLFOLDERFULL/$THEDATE.$db.sql
+            mysqldump -h$DBHOST -u$DBUSER -p$DBPASSWORD -P$DBPORT $db > $SQLFOLDERFULL/$THEDATE.$db.sql
         fi
     done
     echo '|'

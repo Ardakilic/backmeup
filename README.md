@@ -47,38 +47,6 @@ Don't worry :)
 Just click on [this link](https://db.tt/A4QRGuD) to start Dropbox with a bonus space. With my referral, we both earn bonus space.
 
 
-Configuration Values
---------------
-After downloading the script, before running, you must edit your configuration values found in `~/.backmeuprc`:
-
-```sh
-TIMEZONE="Europe/Istanbul" #Your timezone, for a better timestamp in archived filenames
-DBUSER="root" #MySQL user that can dump all databases
-DBPASSWORD="" #MySQL password
-FILESROOT="/var/www" #root of your (virtual) hosting files, E.g: For apache, it is /var/www, for nginx, it's /usr/share/nginx/html "WITHOUT THE END TRAILING SLASH"
-BASEFOLDER="/tmp" #Temporary folder to create database dump folder (a subfolder will be created to this folder upon dumping)
-BACKUPFOLDER="backmeup" #your backup folder that'll be created on Backup provider
-METHOD="dropbox" #Method name, can be "dropbox" or "s3". More providers soon
-S3_BUCKET_NAME="my-aws-bucket" #AWS S3 Bucket name
-S3_STORAGE_CLASS="STANDARD_IA" #AWS S3 storage class. Values can be "STANDARD", "REDUCED_REDUNDANCY", "STANDARD_IA". http://docs.aws.amazon.com/cli/latest/reference/s3/cp.html
-```
-
-On-the-fly Configuration
---------------
-You can set various configuration values on the fly. Here are some full featured examples:
-
-```
-backmeup -tz "Europe/Istanbul" -dbu root -dbpass rootpass -f "/usr/share/nginx/html" -b "/tmp" -bf=my_backups -m s3 -s3bn my-aws-bucket -s3sc STANDARD_IA
-```
-
-Or like this:
-
-````
-backmeup --timezone="Europe/Istanbul" --database-user="root" --database-password="rootpass" --files-root="/usr/share/nginx/html" --base-folder="/tmp" --backup-folder=my-remote-backup-folder --s3-storage-class=STANDARD_IA
-```
-
-None of these are mandatory, you can just use any of these however you want, and even mix together!
-
 Installation
 --------------
 
@@ -87,17 +55,53 @@ Installation
   ```sh
   curl -s https://raw.githubusercontent.com/Ardakilic/backmeup/master/backmeup.sh -o backmeup.sh
   curl -s https://raw.githubusercontent.com/Ardakilic/backmeup/master/.backmeuprc -o ~/.backmeuprc
-  chmod 400 ~/.backmeuprc
+  chmod 600 ~/.backmeuprc
   ```
 * Now, edit the configuration values as stated [here](#configuration-values).
-* Make the file executable and only accessible by your root user and group (or the user you'd like the script to run):
+* Make the files secure, executable and only accessible by your root user and group (or the user you'd like the script to run):
 
   ```sh
   chown root:root backmeup.sh #or any user and group who will run the script or with cron
   chown root:root ~/.backmeuprc #or any user and group who will run the script manually or with cron
+  chmod 400 ~/.backmeuprc #Only readable by owner, and is read-only. To make it writable, change to 600 on demand
   chmod +x backmeup.sh
   ```
 * (Suggested) Copy or move the script into one of the `PATH`s as stated [here](#additional-notes).
+
+
+Configuration Values
+--------------
+After downloading the script, before running, you must edit your configuration values found in `~/.backmeuprc`:
+
+```sh
+TIMEZONE="Europe/Istanbul" #Your timezone, for a better timestamp in archived filenames
+DBHOST="localhost" #MySQL Hostname
+DBUSER="root" #MySQL user that can dump all databases
+DBPASSWORD="" #MySQL password
+DBPORT="3306" #MySQL Port Number
+FILESROOT="/var/www" #root of your (virtual) hosting files, E.g: For apache, it is /var/www, for nginx, it's /usr/share/nginx/html "WITHOUT THE END TRAILING SLASH"
+BASEFOLDER="/tmp" #Temporary folder to create database dump folder (a subfolder will be created to this folder upon dumping)
+BACKUPFOLDER="backmeup" #your backup folder that'll be created on Backup provider
+METHOD="dropbox" #Method name, can be "dropbox" or "s3". More providers soon
+S3_BUCKET_NAME="my-aws-bucket" #AWS S3 Bucket name
+S3_STORAGE_CLASS="STANDARD_IA" #AWS S3 storage class. Values are "STANDARD", "REDUCED_REDUNDANCY", "STANDARD_IA". http://docs.aws.amazon.com/cli/latest/reference/s3/cp.html
+```
+
+On-the-fly Configuration
+--------------
+You can set various configuration values on the fly. Here are some full featured examples:
+
+```
+backmeup -tz "Europe/Istanbul" -dbh localhost -dbu root -dbpass rootpass -dbp 3306 -f "/usr/share/nginx/html" -b "/tmp" -bf=my_backups -m s3 -s3bn my-aws-bucket
+```
+
+Or like this:
+
+````
+backmeup --timezone="Europe/Istanbul" --database-host="localhost" --database-user="root" --database-password="rootpass" --database-port="3306" --files-root="/usr/share/nginx/html" --base-folder="/tmp" --backup-folder=my-remote-backup-folder
+```
+
+None of these are mandatory, you can just use any of these however you want, and even mix together!
 
 Usage
 --------------
@@ -112,7 +116,7 @@ Usage
 
 Important Notice
 --------------
-This script saves MySQL Root password (any user which can show and dump all databases will suffice actually) inside, but it's only accessible by root. In any ways, use it at your own risk. I'm not holding any responsibilities for any damage that this script may do (which shouldn't).
+This script saves MySQL password (any user which can show and dump (all) databases will suffice actually) inside, but it's only accessible by its owner (which is root in examples). In any ways, use it at your own risk. I'm not holding any responsibilities for any damage that this script may do (which shouldn't).
 
 Additional Notes
 --------------
@@ -136,9 +140,15 @@ TODOs
 * Increased security?
 * ~~Reading configuration from an external file~~
 * Postgres support
+* Option to dump only the database(s) or only Virtualhost files
+* Multiple Virtualhost folder support
 
 Version History
 --------------
+###1.1.0
+* You can now define "Database Host" and "Database Port" parameters, so you may even get dumps from remote services such as Amazon RDS. `DBHOST` and `DBHOST` values should be added in `.backmeuprc`
+* The version numbers will follow Semantic Versioning from now on.
+
 ###1.0.1
 * External configuration file support. Now you can update backmeup hassle-free! The file's located at: `~/.backmeuprc`
 * Amazon S3 Storage Class Support: Now you can set how the backup will be stored ([Normal or Infrequent Access](https://aws.amazon.com/s3/storage-classes/) or [Reduced Redundancy](https://aws.amazon.com/s3/reduced-redundancy/) for lesser storage costs).
