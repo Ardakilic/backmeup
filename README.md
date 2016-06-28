@@ -1,7 +1,7 @@
 BackMeUp
 =========
 
-BackMeUp is an automated MySQL databases and files backup solution on Linux Machines using Amazon S3 and Dropbox as remote service.
+BackMeUp is an automated MySQL databases and files backup solution on Linux Machines using Amazon S3, Dropbox and Owncloud as remote storage.
 
 
 ```
@@ -25,7 +25,7 @@ This script does some simple tasks:
 * The script dumps all of your MySQL databases individually.
 * The script backs up all of your Web files (e.g: root of all of your virtual hosts).
 * The script compresses your web-root and databases to a single archive.
-* The script uploads the compressed archive into a folder in your Dropbox account or Amazon S3 bucket.
+* The script uploads the compressed archive into a folder in your Dropbox account, Amazon S3 bucket or Owncloud Server.
 * If the `method` is set to `dropbox`, The script makes sure that you always have the newest Dropbox-Uploader script.
 * After the upload, the script cleans up the temporary files (dumps, the archive itself).
 
@@ -34,7 +34,7 @@ You may easily add this script to your crontab, and just forget about it :smile:
 
 Requirements
 --------------
-* `curl` - To download the Dropbox-uploader script and to upload the backup to Dropbox.
+* `curl` - To download the Dropbox-uploader script and to upload the backup to Dropbox or to Owncloud.
 * `mysql` (cli) - To list databases.
 * `mysqldump` - To dump databases (in most cases, it comes with `mysql` cli).
 * [aws-cli](https://github.com/aws/aws-cli) must be installed and configured if the `method` is set as `s3`.
@@ -82,9 +82,12 @@ DBPORT="3306" #MySQL Port Number
 FILESROOT="/var/www" #root of your (virtual) hosting files, E.g: For apache, it is /var/www, for nginx, it's /usr/share/nginx/html "WITHOUT THE END TRAILING SLASH"
 BASEFOLDER="/tmp" #Temporary folder to create database dump folder (a subfolder will be created to this folder upon dumping)
 BACKUPFOLDER="backmeup" #your backup folder that'll be created on Backup provider
-METHOD="dropbox" #Method name, can be "dropbox" or "s3". More providers soon
+METHOD="dropbox" #Method name, can be "dropbox", "s3" or "owncloud". More providers soon
 S3_BUCKET_NAME="my-aws-bucket" #AWS S3 Bucket name
 S3_STORAGE_CLASS="STANDARD_IA" #AWS S3 storage class. Values are "STANDARD", "REDUCED_REDUNDANCY", "STANDARD_IA". http://docs.aws.amazon.com/cli/latest/reference/s3/cp.html
+OWNCLOUD_USER="admin" #Owncloud user for WebDAV Access
+OWNCLOUD_PASSWORD="password" #Owncloud Password for WebDAV Access
+OWNCLOUD_WEBDAV_ENDPOINT="https://owncloud-host.com/remote.php/webdav/" #Owncloud WebDAV Host, you can get this endpoint from the low end "cog" Settings icon from your OwnCloud WebUI, This has to have the end / character
 ```
 
 On-the-fly Configuration
@@ -92,13 +95,13 @@ On-the-fly Configuration
 You can set various configuration values on the fly. Here are some full featured examples:
 
 ```
-backmeup -tz "Europe/Istanbul" -dbh localhost -dbu root -dbpass rootpass -dbp 3306 -f "/usr/share/nginx/html" -b "/tmp" -bf=my_backups -m s3 -s3bn my-aws-bucket
+backmeup -tz "Europe/Istanbul" -dbh localhost -dbu root -dbpass rootpass -dbp 3306 -f "/usr/share/nginx/html" -b "/tmp" -bf=my_backups -m s3 -s3bn my-aws-bucket -ocdu owncloud-user -ocdp owncloud-password -ocdwebdav "https://owncloud-host.com/remote.php/webdav/"
 ```
 
 Or like this:
 
 ````
-backmeup --timezone="Europe/Istanbul" --database-host="localhost" --database-user="root" --database-password="rootpass" --database-port="3306" --files-root="/usr/share/nginx/html" --base-folder="/tmp" --backup-folder=my-remote-backup-folder
+backmeup --timezone="Europe/Istanbul" --database-host="localhost" --database-user="root" --database-password="rootpass" --database-port="3306" --files-root="/usr/share/nginx/html" --base-folder="/tmp" --backup-folder=my-remote-backup-folder -owncloud-user="owncloud-user" --owncloud-password="owncloud-password" --owncloud-webdav="https://owncloud-host.com/remote.php/webdav/"
 ```
 
 None of these are mandatory, you can just use any of these however you want, and even mix together!
@@ -135,7 +138,7 @@ TODOs
 --------------
 * Tests on CentOS, Arch etc.
 * Mega.nz integration
-* ~~Copy.com integration~~
+* ~~Owncloud Integration~
 * ~~AWS S3 integration~~
 * Increased security?
 * ~~Reading configuration from an external file~~
@@ -144,7 +147,10 @@ TODOs
 * Multiple Virtualhost folder support
 
 Version History
---------------
+--------------~
+###1.2.0
+* Owncloud Integration: You can now upload your backup files to your Owncloud server using WebDAV bridge and curl. You can refer to updated `.backmeuprc` and update if necessary.
+
 ###1.1.0
 * You can now define "Database Host" and "Database Port" parameters, so you may even get dumps from remote services such as Amazon RDS. `DBHOST` and `DBHOST` values should be added in `.backmeuprc`
 * The version numbers will follow Semantic Versioning from now on.

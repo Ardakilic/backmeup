@@ -93,6 +93,18 @@ case $key in
     S3_STORAGE_CLASS="$2"
     shift # past argument
     ;;
+    -ocdu|--owncloud-user)
+    OWNCLOUD_USER="$2"
+    shift # past argument
+    ;;
+    -ocdp|--owncloud-password)
+    OWNCLOUD_PASSWORD="$2"
+    shift # past argument
+    ;;
+    -ocdwebdav|--owncloud-webdav)
+    OWNCLOUD_WEBDAV_ENDPOINT="$2"
+    shift # past argument
+    ;;
 esac
 shift # past argument or value
 done
@@ -212,6 +224,18 @@ then
         then
         echo '| Creating the directory and uploading to Amazon S3...'
         aws s3 cp --storage-class $S3_STORAGE_CLASS $FILENAME s3://$S3_BUCKET_NAME/$BACKUPFOLDER/ 
+        echo '|'
+        echo '| Done!'
+        echo '|'
+    fi
+
+    # If uploading method is set to OwnCloud
+    if [[ "$METHOD" == "owncloud" ]]
+        then
+        #https://doc.owncloud.org/server/9.0/user_manual/files/access_webdav.html#accessing-files-using-curl
+        echo '| Creating the directory and uploading to Owncloud...'
+        curl -u $OWNCLOUD_USER:$OWNCLOUD_PASSWORD -X MKCOL "$OWNCLOUD_WEBDAV_ENDPOINT$BACKUPFOLDER"
+        curl -u $OWNCLOUD_USER:$OWNCLOUD_PASSWORD -X PUT -T $FILENAME "$OWNCLOUD_WEBDAV_ENDPOINT$BACKUPFOLDER/$FILENAME"
         echo '|'
         echo '| Done!'
         echo '|'
