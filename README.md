@@ -138,7 +138,7 @@ TODOs
 --------------
 * Tests on CentOS, Arch etc.
 * Mega.nz integration
-* ~~Owncloud Integration~
+* ~~Owncloud Integration~~
 * ~~AWS S3 integration~~
 * Increased security?
 * ~~Reading configuration from an external file~~
@@ -147,7 +147,7 @@ TODOs
 * Multiple Virtualhost folder support
 
 Version History
---------------~
+--------------
 ###1.2.0
 * Owncloud Integration: You can now upload your backup files to your Owncloud server using WebDAV bridge and curl. You can refer to updated `.backmeuprc` and update if necessary.
 
