@@ -95,7 +95,7 @@ On-the-fly Configuration
 You can set various configuration values on the fly. Here are some full featured examples:
 
 ```
-backmeup -tz "Europe/Istanbul" -dbh localhost -dbu root -dbpass rootpass -dbp 3306 -f "/usr/share/nginx/html" -b "/tmp" -bf=my_backups -m s3 -s3bn my-aws-bucket -ocdu owncloud-user -ocdp owncloud-password -ocdwebdav "https://owncloud-host.com/remote.php/webdav/"
+backmeup -tz "Europe/Istanbul" -dbh localhost -dbu root -dbpass "rootpass" -dbp 3306 -f "/usr/share/nginx/html" -b "/tmp" -bf=my_backups -m s3 -s3bn my-aws-bucket -ocdu "owncloud-user" -ocdp "owncloud-password" -ocdwebdav "https://owncloud-host.com/remote.php/webdav/"
 ```
 
 Or like this:

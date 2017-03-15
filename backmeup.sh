@@ -167,11 +167,11 @@ then
     echo '| Dumping Databases...'
     echo '|'
     # Let's start dumping the databases
-    databases=`mysql -h$DBHOST -u$DBUSER -p$DBPASSWORD -P$DBPORT -e "SHOW DATABASES;" | tr -d "| " | grep -v Database`
+    databases=$(mysql -h$DBHOST -u"$DBUSER" -p"$DBPASSWORD" -P$DBPORT -e "SHOW DATABASES;" | tr -d "| " | grep -v Database)
     for db in $databases; do
         if [[ "$db" != "information_schema" ]] && [[ "$db" != "performance_schema" ]] && [[ "$db" != "mysql" ]] && [[ "$db" != _* ]] ; then
             echo "| Dumping database: $db"
-            mysqldump -h$DBHOST -u$DBUSER -p$DBPASSWORD -P$DBPORT $db > $SQLFOLDERFULL/$THEDATE.$db.sql
+            mysqldump -h$DBHOST -u"$DBUSER" -p"$DBPASSWORD" -P$DBPORT $db > $SQLFOLDERFULL/$THEDATE.$db.sql
         fi
     done
     echo '|'
@@ -234,8 +234,8 @@ then
         then
         #https://doc.owncloud.org/server/9.0/user_manual/files/access_webdav.html#accessing-files-using-curl
         echo '| Creating the directory and uploading to Owncloud...'
-        curl -u $OWNCLOUD_USER:$OWNCLOUD_PASSWORD -X MKCOL "$OWNCLOUD_WEBDAV_ENDPOINT$BACKUPFOLDER"
-        curl -u $OWNCLOUD_USER:$OWNCLOUD_PASSWORD -X PUT -T $FILENAME "$OWNCLOUD_WEBDAV_ENDPOINT$BACKUPFOLDER/$FILENAME"
+        curl -u $OWNCLOUD_USER:"$OWNCLOUD_PASSWORD" -X MKCOL "$OWNCLOUD_WEBDAV_ENDPOINT$BACKUPFOLDER"
+        curl -u $OWNCLOUD_USER:"$OWNCLOUD_PASSWORD" -X PUT -T $FILENAME "$OWNCLOUD_WEBDAV_ENDPOINT$BACKUPFOLDER/$FILENAME"
         echo '|'
         echo '| Done!'
         echo '|'
