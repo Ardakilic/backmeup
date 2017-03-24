@@ -52,7 +52,7 @@ Installation
 
 * Run these commands first:
 
-  ```sh
+  ```bash
   curl -s https://raw.githubusercontent.com/Ardakilic/backmeup/master/backmeup.sh -o backmeup.sh
   curl -s https://raw.githubusercontent.com/Ardakilic/backmeup/master/.backmeuprc -o ~/.backmeuprc
   chmod 600 ~/.backmeuprc
@@ -60,7 +60,7 @@ Installation
 * Now, edit the configuration values as stated [here](#configuration-values).
 * Make the files secure, executable and only accessible by your root user and group (or the user you'd like the script to run):
 
-  ```sh
+  ```bash
   chown root:root backmeup.sh #or any user and group who will run the script or with cron
   chown root:root ~/.backmeuprc #or any user and group who will run the script manually or with cron
   chmod 400 ~/.backmeuprc #Only readable by owner, and is read-only. To make it writable, change to 600 on demand
@@ -73,7 +73,7 @@ Configuration Values
 --------------
 After downloading the script, before running, you must edit your configuration values found in `~/.backmeuprc`:
 
-```sh
+```bash
 TIMEZONE="Europe/Istanbul" #Your timezone, for a better timestamp in archived filenames
 DBHOST="localhost" #MySQL Hostname
 DBUSER="root" #MySQL user that can dump all databases
@@ -94,13 +94,13 @@ On-the-fly Configuration
 --------------
 You can set various configuration values on the fly. Here are some full featured examples:
 
-```
+```bash
 backmeup -tz "Europe/Istanbul" -dbh localhost -dbu root -dbpass "rootpass" -dbp 3306 -f "/usr/share/nginx/html" -b "/tmp" -bf=my_backups -m s3 -s3bn my-aws-bucket -ocdu "owncloud-user" -ocdp "owncloud-password" -ocdwebdav "https://owncloud-host.com/remote.php/webdav/"
 ```
 
 Or like this:
 
-````
+```bash
 backmeup --timezone="Europe/Istanbul" --database-host="localhost" --database-user="root" --database-password="rootpass" --database-port="3306" --files-root="/usr/share/nginx/html" --base-folder="/tmp" --backup-folder=my-remote-backup-folder -owncloud-user="owncloud-user" --owncloud-password="owncloud-password" --owncloud-webdav="https://owncloud-host.com/remote.php/webdav/"
 ```
 
@@ -111,7 +111,7 @@ Usage
 
 * Execute the configured script:
 
-  ```sh
+  ```bash
   ./backmeup.sh #or backmeup directly if it's in your PATH.
   ```
 * If this is the first attempt to running and `method` is set to `dropbox`, Dropbox-Uploader will ask for an APP key and secret. You should create an application, provide these values and click on provided authorization link (Don't worry, the Dropbox-uploader has a nice wizard which guides you, can't be easier). After you've authorized, re-run the script using `./backmeup.sh`
