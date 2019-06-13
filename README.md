@@ -1,7 +1,7 @@
 BackMeUp
 =========
 
-BackMeUp is an automated MySQL databases and files backup solution on Linux Machines using Amazon S3, Dropbox and Owncloud as remote storage.
+BackMeUp is an automated MySQL databases and files backup solution on Linux Machines using Amazon S3, Dropbox and WebDAV (NextCloud etc.) as remote storage.
 
 
 ```
@@ -23,7 +23,7 @@ What This Script Does
 --------------
 This script does some simple tasks:
 * The script dumps all of your MySQL databases individually.
-* The script backs up all of your Web files (e.g: root of all of your virtual hosts).
+* The script backs up all of your Web files (e.g: root path of all of your virtual hosts).
 * The script compresses your web-root and databases to a single archive.
 * The script uploads the compressed archive into a folder in your Dropbox account, Amazon S3 bucket or Owncloud Server.
 * If the `method` is set to `dropbox`, The script makes sure that you always have the newest Dropbox-Uploader script.
@@ -34,18 +34,11 @@ You may easily add this script to your crontab, and just forget about it :smile:
 
 Requirements
 --------------
-* `curl` - To download the Dropbox-uploader script and to upload the backup to Dropbox or to Owncloud.
+* `curl` - To download the .backmeuprc file, Dropbox-uploader script and to upload the backup to Dropbox or to WebDAV.
 * `mysql` (cli) - To list databases.
+* `7z` (cli) - To list compress backup if `compression` is set as 7zip, or `tar` (cli) if `compression` is set as `tar`.
 * `mysqldump` - To dump databases (in most cases, it comes with `mysql` cli).
 * [aws-cli](https://github.com/aws/aws-cli) must be installed and configured if the `method` is set as `s3`.
-
-
-Don't Have a Dropbox Account?
---------------
-Don't worry :)
-
-Just click on [this link](https://db.tt/A4QRGuD) to start Dropbox with a bonus space. With my referral, we both earn bonus space.
-
 
 Installation
 --------------
@@ -71,37 +64,20 @@ Installation
 
 Configuration Values
 --------------
-After downloading the script, before running, you must edit your configuration values found in `~/.backmeuprc`:
-
-```bash
-TIMEZONE="Europe/Istanbul" #Your timezone, for a better timestamp in archived filenames
-DBHOST="localhost" #MySQL Hostname
-DBUSER="root" #MySQL user that can dump all databases
-DBPASSWORD="" #MySQL password
-DBPORT="3306" #MySQL Port Number
-FILESROOT="/var/www" #root of your (virtual) hosting files, E.g: For apache, it is /var/www, for nginx, it's /usr/share/nginx/html "WITHOUT THE END TRAILING SLASH"
-BASEFOLDER="/tmp" #Temporary folder to create database dump folder (a subfolder will be created to this folder upon dumping)
-BACKUPFOLDER="backmeup" #your backup folder that'll be created on Backup provider
-METHOD="dropbox" #Method name, can be "dropbox", "s3" or "owncloud". More providers soon
-S3_BUCKET_NAME="my-aws-bucket" #AWS S3 Bucket name
-S3_STORAGE_CLASS="STANDARD_IA" #AWS S3 storage class. Values are "STANDARD", "REDUCED_REDUNDANCY", "STANDARD_IA". http://docs.aws.amazon.com/cli/latest/reference/s3/cp.html
-OWNCLOUD_USER="admin" #Owncloud user for WebDAV Access
-OWNCLOUD_PASSWORD="password" #Owncloud Password for WebDAV Access
-OWNCLOUD_WEBDAV_ENDPOINT="https://owncloud-host.com/remote.php/webdav/" #Owncloud WebDAV Host, you can get this endpoint from the low end "cog" Settings icon from your OwnCloud WebUI, This has to have the end / character
-```
+After downloading the script, before running, you must edit your configuration values found in [~/.backmeuprc](./.backmeuprc).
 
 On-the-fly Configuration
 --------------
 You can set various configuration values on the fly. Here are some full featured examples:
 
 ```bash
-backmeup -tz "Europe/Istanbul" -dbh localhost -dbu root -dbpass "rootpass" -dbp 3306 -f "/usr/share/nginx/html" -b "/tmp" -bf=my_backups -m s3 -s3bn my-aws-bucket -ocdu "owncloud-user" -ocdp "owncloud-password" -ocdwebdav "https://owncloud-host.com/remote.php/webdav/"
+backmeup -tz "Europe/Istanbul" -dbh localhost -dbu root -dbpass "rootpass" -dbp 3306 -f "/usr/share/nginx/html" -b "/tmp" -bf=my_backups -c 7z -7zcp "p4ssw0rd" -m s3 -s3bn my-aws-bucket -wdu "webdav-user" -wdp "webdav-password" -webdav "https://nextcloud-host.com/remote.php/webdav/"
 ```
 
 Or like this:
 
 ```bash
-backmeup --timezone="Europe/Istanbul" --database-host="localhost" --database-user="root" --database-password="rootpass" --database-port="3306" --files-root="/usr/share/nginx/html" --base-folder="/tmp" --backup-folder=my-remote-backup-folder -owncloud-user="owncloud-user" --owncloud-password="owncloud-password" --owncloud-webdav="https://owncloud-host.com/remote.php/webdav/"
+backmeup --timezone="Europe/Istanbul" --database-host="localhost" --database-user="root" --database-password="rootpass" --database-port="3306" --files-root="/usr/share/nginx/html" --base-folder="/tmp" --compression="7z" --7-zip-compression-password="p4ssw0rd" --backup-folder="my-remote-backup-folder" --webdav-user="webdav-user" --webdav-password="webdav-password" --webdav="https://nextcloud-host.com/remote.php/webdav/"
 ```
 
 None of these are mandatory, you can just use any of these however you want, and even mix together!
@@ -112,14 +88,14 @@ Usage
 * Execute the configured script:
 
   ```bash
-  ./backmeup.sh #or backmeup directly if it's in your PATH.
+  ./backmeup.sh #or "backmeup" directly if it's in your PATH.
   ```
 * If this is the first attempt to running and `method` is set to `dropbox`, Dropbox-Uploader will ask for an APP key and secret. You should create an application, provide these values and click on provided authorization link (Don't worry, the Dropbox-uploader has a nice wizard which guides you, can't be easier). After you've authorized, re-run the script using `./backmeup.sh`
 * If everything went well, in a couple of minutes, you should see your database and files copied into the remote server.
 
 Important Notice
 --------------
-This script saves MySQL password (any user which can show and dump (all) databases will suffice actually) inside, but it's only accessible by its owner (which is root in examples). In any ways, use it at your own risk. I'm not holding any responsibilities for any damage that this script may do (which shouldn't).
+This script saves MySQL password (any user which can show and dump (all) databases will suffice actually) inside, but it's only accessible by its owner and cannot be read by anyone else. In any ways, use it at your own risk. I'm not holding any responsibilities for any damage that this script may do (which shouldn't).
 
 Additional Notes
 --------------
@@ -137,10 +113,9 @@ Special Thanks
 TODOs
 --------------
 * Tests on CentOS, Arch etc.
-* Mega.nz integration
-* ~~Owncloud Integration~~
+* ~~WebDAV (Owncloud etc.) Integration~~
 * ~~AWS S3 integration~~
-* Increased security?
+* ~~Increased security? (backup is encrypted with a password now for 7zip archives)~~
 * ~~Reading configuration from an external file~~
 * Postgres support
 * Option to dump only the database(s) or only Virtualhost files
@@ -148,28 +123,39 @@ TODOs
 
 Version History
 --------------
-###1.2.0
+### 1.3.0
+
+* 7-zip archive support
+* Encryption support for 7-zip archives.
+
+### 1.2.0
+
 * Owncloud Integration: You can now upload your backup files to your Owncloud server using WebDAV bridge and curl. You can refer to updated `.backmeuprc` and update if necessary.
 
-###1.1.0
+### 1.1.0
+
 * You can now define "Database Host" and "Database Port" parameters, so you may even get dumps from remote services such as Amazon RDS. `DBHOST` and `DBHOST` values should be added in `.backmeuprc`
 * The version numbers will follow Semantic Versioning from now on.
 
-###1.0.1
+### 1.0.1
+
 * External configuration file support. Now you can update backmeup hassle-free! The file's located at: `~/.backmeuprc`
 * Amazon S3 Storage Class Support: Now you can set how the backup will be stored ([Normal or Infrequent Access](https://aws.amazon.com/s3/storage-classes/) or [Reduced Redundancy](https://aws.amazon.com/s3/reduced-redundancy/) for lesser storage costs).
 * An issue with Dropbox-uploader download path is fixed.
 
-###1.0.0
+### 1.0.0
+
 * Amazon S3 support (using official [aws-cli](https://github.com/aws/aws-cli))
 * The code is optimised to use in cron
 * Arguments and options support. You can pass the arguments and options to the script on-the-fly
 
-###0.1.1
+### 0.1.1
+
 * Defined PATHs to the script so that it should work better on cron withot needing to define before running.
 
 
-###0.1.0
+### 0.1.0
+
 * Initial Release
 
 License
