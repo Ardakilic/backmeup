@@ -170,6 +170,15 @@ then
     fi
 fi
 
+if [[ "$METHOD" == "mega" ]];
+then
+    if ! [[ -x "$(command -v mega-put)" ]];
+        then
+        INSTALLABLE="nope"
+        ERRORMSGS+=('| You must install MegaCMD cli to run this script to upload backups to Mega.nz')
+    fi
+fi
+
 
 # Let's check whether the script is installable
 if [[ "$INSTALLABLE" == "yes" ]];
@@ -259,6 +268,14 @@ then
         # If uploading method is set to AWS S3
         echo '| Creating the directory and uploading to Amazon S3...'
         aws s3 cp --storage-class $S3_STORAGE_CLASS $FILENAME s3://$S3_BUCKET_NAME/$BACKUPFOLDER/ 
+        echo '|'
+        echo '| Done!'
+        echo '|'
+    elif [[ "$METHOD" == "mega" ]];
+    then
+        # If uploading method is set to Mega
+        echo '| Creating the directory and uploading to Mega.nz...'
+        aws mega-put $FILENAME /$BACKUPFOLDER/ -c
         echo '|'
         echo '| Done!'
         echo '|'

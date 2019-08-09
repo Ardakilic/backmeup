@@ -1,7 +1,7 @@
 BackMeUp
 =========
 
-BackMeUp is an automated MySQL databases and files backup solution on Linux Machines using Amazon S3, Dropbox and WebDAV (NextCloud etc.) as remote storage.
+BackMeUp is an automated MySQL databases and files backup solution on Linux Machines using Amazon S3, Dropbox, Mega.nz and WebDAV (NextCloud etc.) as remote storage.
 
 
 ```
@@ -25,7 +25,7 @@ This script does some simple tasks:
 * The script dumps all of your MySQL databases individually.
 * The script backs up all of your Web files (e.g: root path of all of your virtual hosts).
 * The script compresses your web-root and databases to a single archive.
-* The script uploads the compressed archive into a folder in your Dropbox account, Amazon S3 bucket or Owncloud Server.
+* The script uploads the compressed archive into a folder in your Dropbox account, Amazon S3 bucket, Mega.nz or to a WebDav solution such as OrnCloud/NextCloud Server.
 * If the `method` is set to `dropbox`, The script makes sure that you always have the newest Dropbox-Uploader script.
 * After the upload, the script cleans up the temporary files (dumps, the archive itself).
 
@@ -39,6 +39,7 @@ Requirements
 * `7z` (cli) - To list compress backup if `compression` is set as 7zip, or `tar` (cli) if `compression` is set as `tar`.
 * `mysqldump` - To dump databases (in most cases, it comes with `mysql` cli).
 * [aws-cli](https://github.com/aws/aws-cli) must be installed and configured if the `method` is set as `s3`.
+* [mega-cmd](https://mega.nz/cmd) (the `mega-put` command is used that comes with the package) must be installed and configured if the `method` is set as `mega`.
 
 Installation
 --------------
@@ -123,6 +124,11 @@ TODOs
 
 Version History
 --------------
+
+### 1.4.0
+
+* Mega.nz integration implemented
+
 ### 1.3.0
 
 * 7-zip archive support
@@ -130,7 +136,7 @@ Version History
 
 ### 1.2.0
 
-* Owncloud Integration: You can now upload your backup files to your Owncloud server using WebDAV bridge and curl. You can refer to updated `.backmeuprc` and update if necessary.
+* WebDAV (Owncloud etc.) Integration: You can now upload your backup files to your WebDAV server using WebDAV bridge and curl. You can refer to updated `.backmeuprc` and update if necessary.
 
 ### 1.1.0
 
@@ -157,6 +163,17 @@ Version History
 ### 0.1.0
 
 * Initial Release
+
+Buy me a coffee or beer!
+--------
+
+Donations are kindly accepted to help develop my projects further.
+
+BTC: 1QFHeSrhWWVhmneDBkArKvpmPohRjpf7p6
+
+ETH / ERC20 Tokens: 0x3C2b0AC49257300DaB96dF8b49d254Bb696B3458
+
+NEO / Nep5 Tokens: AYbHEah5Y4J6BV8Y9wkWJY7cCyHQameaHc
 
 License
 --------------
