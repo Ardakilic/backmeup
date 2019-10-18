@@ -189,7 +189,7 @@ then
     # folder for new backup
     SQLFOLDER=backmeup-databases-$THEDATE
     SQLFOLDERFULL="$BASEFOLDER/db/$SQLFOLDER"
-    mkdir "$BASEFOLDER/db/" > /dev>null # to ensure the subfolder exists
+    mkdir -p "$BASEFOLDER/db/" # to ensure the subfolder exists
     mkdir $SQLFOLDERFULL
 
     # First, let's create the backup file regardless of the provider:
