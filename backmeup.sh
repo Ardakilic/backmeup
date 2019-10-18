@@ -94,6 +94,10 @@ case $key in
     SEVENZIP_COMPRESSION_PASSWORD="$2"
     shift # past argument
     ;;
+    -rcr|--rclone-remote)
+    RCLONE_REMOTE="$2"
+    shift # past argument
+    ;;
     -s3bn|--s3-bucket-name)
     S3_BUCKET_NAME="$2"
     shift # past argument
@@ -176,6 +180,15 @@ then
         then
         INSTALLABLE="nope"
         ERRORMSGS+=('| You must install MegaCMD cli to run this script to upload backups to Mega.nz')
+    fi
+fi
+
+if [[ "$METHOD" == "gdrive" ]];
+then
+    if ! [[ -x "$(command -v rclone)" ]];
+        then
+        INSTALLABLE="nope"
+        ERRORMSGS+=('| You must install rclone cli to run this script to upload backups to Google Drive')
     fi
 fi
 
@@ -288,6 +301,24 @@ then
         echo '| Creating the directory and uploading to Owncloud...'
         curl -u "$WEBDAV_USER":"$WEBDAV_PASSWORD" -X MKCOL "$WEBDAV_ENDPOINT$BACKUPFOLDER"
         curl -u "$WEBDAV_USER":"$WEBDAV_PASSWORD" -X PUT -T "$BASEFOLDER/$FILENAME" "$WEBDAV_ENDPOINT$BACKUPFOLDER/$FILENAME"
+        echo '|'
+        echo '| Done!'
+        echo '|'
+    fi
+
+    # If uploading method is set to Google Drive
+    if [[ "$METHOD" == "gdrive" ]];
+    then
+        if [[ ! -f "$HOME/.config/rclone/rclone.conf" ]];
+        then
+            echo '| You must configure the rclone first!'
+            echo '| Please run rclone config as the user which will run this script and follow the instructions.'
+            echo '| After that, re-run this script again'
+        fi
+        # https://rclone.org/drive/
+        echo '| Creating the directory and uploading to Google Drive...'
+        rclone mkdir "$RCLONE_REMOTE$BACKUPFOLDER"
+        rclone copy "$BASEFOLDER/$FILENAME" "$RCLONE_REMOTE$BACKUPFOLDER/$FILENAME"
         echo '|'
         echo '| Done!'
         echo '|'
