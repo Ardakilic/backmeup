@@ -94,7 +94,7 @@ case $key in
     SEVENZIP_COMPRESSION_PASSWORD="$2"
     shift # past argument
     ;;
-    -rcr|--rclone-remote)
+    -gdrv|--gdrive-remote)
     RCLONE_REMOTE="$2"
     shift # past argument
     ;;
