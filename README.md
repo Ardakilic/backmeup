@@ -125,6 +125,11 @@ TODOs
 Version History
 --------------
 
+### 1.5.0
+
+* Google drive feature implemented
+* A minor fix on creating folders step
+
 ### 1.4.0
 
 * Mega.nz integration implemented
