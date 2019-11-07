@@ -314,14 +314,15 @@ then
             echo '| You must configure the rclone first!'
             echo '| Please run rclone config as the user which will run this script and follow the instructions.'
             echo '| After that, re-run this script again'
+        else
+            # https://rclone.org/drive/
+            echo '| Creating the directory and uploading to Google Drive...'
+            rclone mkdir "$RCLONE_REMOTE$BACKUPFOLDER"
+            rclone copy "$BASEFOLDER/$FILENAME" "$RCLONE_REMOTE$BACKUPFOLDER/$FILENAME"
+            echo '|'
+            echo '| Done!'
+            echo '|'
         fi
-        # https://rclone.org/drive/
-        echo '| Creating the directory and uploading to Google Drive...'
-        rclone mkdir "$RCLONE_REMOTE$BACKUPFOLDER"
-        rclone copy "$BASEFOLDER/$FILENAME" "$RCLONE_REMOTE$BACKUPFOLDER/$FILENAME"
-        echo '|'
-        echo '| Done!'
-        echo '|'
     fi
 
     echo '| Cleaning up...'
