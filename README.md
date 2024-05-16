@@ -1,6 +1,9 @@
 BackMeUp
 =========
 
+
+⚠️This repository is deprecated. Use proper tools such as rclone, docker backup scripts etc. Hence the repository is now read-only as of 2024.05.16 ⚠️
+
 BackMeUp is an automated MySQL databases and files backup solution on Linux Machines using Amazon S3, Dropbox, Mega.nz and WebDAV (NextCloud etc.) as remote storage.
 
 
